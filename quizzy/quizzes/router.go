@@ -144,7 +144,7 @@ func handlePostQuestion(ctx *gin.Context) {
 		return
 	}
 
-	ctx.Header("Location", strings.Join([]string{"api/quiz", quiz.Id, "questions", question.Id}, "/"))
+	ctx.Header("Location", strings.Join([]string{"api", "quiz", quiz.Id, "questions", question.Id}, "/"))
 	ctx.Status(http.StatusCreated)
 }
 
