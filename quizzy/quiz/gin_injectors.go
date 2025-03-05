@@ -34,8 +34,8 @@ func useCodeResolver(ctx *gin.Context) QuizCodeResolver {
 	return ctx.MustGet("quiz-code-resolver").(QuizCodeResolver)
 }
 
-func useQuiz(ctx *gin.Context) Quiz {
-	return ctx.MustGet("current-quiz").(Quiz)
+func useQuiz(ctx *gin.Context) Document {
+	return ctx.MustGet("current-quiz").(Document)
 }
 
 func provideQuiz(ctx *gin.Context) {
@@ -50,23 +50,4 @@ func provideQuiz(ctx *gin.Context) {
 	} else {
 		ctx.AbortWithStatus(http.StatusInternalServerError)
 	}
-}
-
-func provideQuestion(ctx *gin.Context) {
-	id := middlewares.UseIdentity(ctx)
-	store := useStore(ctx)
-	qid := ctx.Param("question-id")
-	quiz := useQuiz(ctx)
-
-	if question, err := store.GetUniqueQuestion(id.Uid, quiz.Id, qid); err == nil {
-		ctx.Set("current-question", question)
-	} else if errors.Is(err, ErrNotFound) {
-		ctx.AbortWithStatus(http.StatusNotFound)
-	} else {
-		ctx.AbortWithStatus(http.StatusInternalServerError)
-	}
-}
-
-func useQuestion(ctx *gin.Context) Question {
-	return ctx.MustGet("current-question").(Question)
 }

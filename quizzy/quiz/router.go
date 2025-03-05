@@ -7,7 +7,6 @@ import (
 	"github.com/google/uuid"
 	"net/http"
 	"quizzy.app/backend/quizzy/middlewares"
-	"strings"
 )
 
 func ConfigureRoutes(rt *gin.RouterGroup) {
@@ -19,9 +18,13 @@ func ConfigureRoutes(rt *gin.RouterGroup) {
 	quiz.GET("", handleGetQuiz)
 	quiz.PATCH("", handlePatchQuiz)
 	quiz.GET("/questions", handleGetQuestions)
+<<<<<<< HEAD
 	quiz.POST("/questions", handlePostQuestion)
 	quiz.PUT("/questions/:question-id", provideQuestion, handlePutQuestion)
 	quiz.POST("/start", provideCodeResolver, handleStartQuiz)
+=======
+	quiz.POST("/questions", handlePostQuiz)
+>>>>>>> parent of f80ae81 (feat: issues 9, 10, 11 done)
 }
 
 func handleGetQuiz(ctx *gin.Context) {
@@ -30,8 +33,12 @@ func handleGetQuiz(ctx *gin.Context) {
 }
 
 type QuizzesResponse struct {
+<<<<<<< HEAD
 	Data  []Quiz `json:"data"`
 	Links Links  `json:"_links"`
+=======
+	Data []Document `json:"data"`
+>>>>>>> parent of f80ae81 (feat: issues 9, 10, 11 done)
 }
 
 func handleGetAllUserQuiz(ctx *gin.Context) {
@@ -74,22 +81,35 @@ func handlePostQuiz(ctx *gin.Context) {
 			Code:        code,
 		}
 
+<<<<<<< HEAD
 		if err2 := store.Upsert(id.Uid, quiz); err2 == nil {
 			ctx.Header("Location", fmt.Sprintf("/api/quiz/%s", quiz.Id))
 			ctx.JSON(http.StatusCreated, quiz)
 			return
 		}
+=======
+	quiz := Document{
+		Uid:         uuid.New().String(),
+		Title:       req.Title,
+		Description: req.Description,
+	}
+
+	if err := store.Upsert(id.Uid, quiz); err == nil {
+		ctx.Header("Location", ctx.Request.URL.JoinPath(quiz.Uid).RawPath)
+		ctx.JSON(http.StatusCreated, quiz)
+		return
+>>>>>>> parent of f80ae81 (feat: issues 9, 10, 11 done)
 	}
 
 	// WARNING / WARNING / WARNING //
-	// If this code-path is reached, it means that the requested user was never
-	// registered in our firestore.
+	// If this code-path is reached, it means that the requested user has never
+	// been registered in our firestore.
 	// WARNING / WARNING / WARNING //
 
 	// This may happen if client does some weird things...
 	// We should never let the client decide about this process,
 	// user registration must be done in single request (Client->Server), or we must use pub/sub
-	// from firebase to store user automatically to avoid data consistency issues.
+	// from firebase to firestore to store user automatically to avoid data consistency issues.
 	ctx.AbortWithStatus(http.StatusInternalServerError)
 }
 
@@ -106,7 +126,7 @@ func handlePatchQuiz(ctx *gin.Context) {
 		return
 	}
 
-	if err := store.Patch(id.Uid, quiz.Id, req); err == nil {
+	if err := store.Patch(id.Uid, quiz.Uid, req); err == nil {
 		ctx.Status(http.StatusNoContent)
 	} else if errors.Is(err, ErrInvalidPatchOperator) || errors.Is(err, ErrInvalidPatchField) {
 		ctx.AbortWithStatus(http.StatusBadRequest)
@@ -131,19 +151,18 @@ func handlePostQuestion(ctx *gin.Context) {
 		return
 	}
 
-	question := Question{
-		Id:      uuid.New().String(),
+	// Appending question.
+	quiz.Questions = append(quiz.Questions, Question{
 		Title:   req.Title,
+		Uid:     uuid.New().String(),
 		Answers: req.Answers,
-	}
-	err := store.UpsertQuestion(id.Uid, quiz.Id, question)
+	})
 
-	if err != nil {
+	if store.Upsert(id.Uid, quiz) != nil {
 		ctx.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
 
-	ctx.Header("Location", strings.Join([]string{"quiz", quiz.Id, "questions", question.Id}, "/"))
 	ctx.Status(http.StatusCreated)
 }
 
@@ -151,6 +170,7 @@ func handleGetQuestions(ctx *gin.Context) {
 	quiz := useQuiz(ctx)
 	ctx.JSON(http.StatusOK, quiz.Questions)
 }
+<<<<<<< HEAD
 
 type UnidentifiedAnswer struct {
 	Title     string `json:"title"`
@@ -207,3 +227,5 @@ func handleStartQuiz(ctx *gin.Context) {
 	ctx.Header("Location", fmt.Sprintf("/api/execution/%s", quiz.Code))
 	ctx.Status(http.StatusCreated)
 }
+=======
+>>>>>>> parent of f80ae81 (feat: issues 9, 10, 11 done)

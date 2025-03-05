@@ -3,7 +3,6 @@ package users
 import (
 	"cloud.google.com/go/firestore"
 	"context"
-	"strings"
 )
 
 type fireStoreAdapter struct {
@@ -14,31 +13,32 @@ func ConfigureStore(client *firestore.Client) Store {
 	return &fireStoreAdapter{client}
 }
 
-func (fs *fireStoreAdapter) Upsert(user User) error {
+func (fs *fireStoreAdapter) Upsert(user Document) error {
 	_, err := fs.client.
-		Doc(strings.Join([]string{"users", user.Id}, "/")).
+		Collection("users").
+		Doc(user.Uid).
 		Set(context.Background(), user)
 	return err
 }
 
-func (fs *fireStoreAdapter) GetUnique(id string) (User, error) {
+func (fs *fireStoreAdapter) GetUnique(uid string) (Document, error) {
 	doc, err := fs.client.
-		Doc(strings.Join([]string{"users", id}, "/")).
+		Collection("users").
+		Doc(uid).
 		Get(context.Background())
 
 	if err != nil {
-		return User{}, err
+		return Document{}, err
 	}
 
 	if !doc.Exists() {
-		return User{}, ErrNotFound
+		return Document{}, ErrNotFound
 	}
 
-	var user User
+	var user Document
 	if err2 := doc.DataTo(&user); err2 != nil {
 		return user, err2
 	}
 
-	user.Id = doc.Ref.ID
 	return user, nil
 }
