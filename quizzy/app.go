@@ -1,13 +1,11 @@
 package quizzy
 
 import (
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"log"
 	"quizzy.app/backend/quizzy/cfg"
 	quizzyhttp "quizzy.app/backend/quizzy/http"
 	"quizzy.app/backend/quizzy/services"
-	"time"
 )
 
 func Run() {
@@ -20,24 +18,16 @@ func Run() {
 
 	// Initializing GIN engine.
 	engine := gin.Default()
-
-	// Configure CORS
-	corsConfig := cors.Config{
-		AllowOrigins:     []string{"http://localhost:4200"},
-		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "Accept"},
-		ExposeHeaders:    []string{"Content-Length"},
-		AllowCredentials: true,
-		MaxAge:           12 * time.Hour,
-	}
-
-	// Apply CORS middleware
-	engine.Use(cors.New(corsConfig))
+	//engine.Use(cors.Default())
 
 	router := engine.Group(config.BasePath)
 
-	// Firebase and Redis middleware remain the same
+	// Configure database provider.
+	// Firebase access is injected here into GIN context,
+	// this will enable fast access to database through handling chain itself.
 	router.Use(func(ctx *gin.Context) {
+		//FIXME: Firebase application must be initialized outside ConfigureFirebase().
+		// Firestore can be initialized each time we need it.
 		if client, err := services.ConfigureFirebase(config); err == nil {
 			ctx.Set("firebase-services", client)
 		}
@@ -62,9 +52,12 @@ func setGinMode(env string) {
 	switch env {
 	case cfg.EnvDevelopment:
 		gin.SetMode(gin.DebugMode)
+		break
 	case cfg.EnvTest:
 		gin.SetMode(gin.TestMode)
+		break
 	default:
 		gin.SetMode(gin.ReleaseMode)
+		break
 	}
 }
