@@ -11,8 +11,6 @@ const (
 	EnvTest        = "TEST"
 )
 
-// AppConfig describe what configuration options can be applied to this application.
-// Settings here, include external services connection URI, running environment (dev, test, prod)...
 type AppConfig struct {
 	// Application environment.
 	Env string
@@ -26,7 +24,7 @@ type AppConfig struct {
 	RedisUri string
 }
 
-// getEnvDefault returns environment variable matching to the given key if found,
+// getEnvDefault fetch environment variable from the given key and return it if found,
 // otherwise the default value is returned.
 func getEnvDefault(key, def string) string {
 	if v, f := os.LookupEnv(key); f {
@@ -36,7 +34,6 @@ func getEnvDefault(key, def string) string {
 	return def
 }
 
-// LoadCfgFromEnv generate a new AppConfig from environment.
 func LoadCfgFromEnv() AppConfig {
 	env := strings.ToUpper(getEnvDefault("APP_ENV", EnvProduction))
 	
